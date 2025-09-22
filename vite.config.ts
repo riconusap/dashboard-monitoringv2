@@ -3,6 +3,16 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
+// Determine base URL for GitHub Pages
+const getBaseUrl = () => {
+  // For GitHub Pages deployment
+  if (process.env.NODE_ENV === 'production') {
+    return '/dashboard-monitoringv2/';
+  }
+  // For local development
+  return '/';
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
@@ -12,7 +22,7 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-  base: "/",
+  base: getBaseUrl(),
   build: {
     chunkSizeWarningLimit: 3000,
   },
