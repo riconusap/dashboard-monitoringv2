@@ -1,115 +1,70 @@
 <template>
-  <div class="knowledgebase-main d-flex flex-column h-100">
-    <!-- Header -->
-    <div class="kb-header bg-light border-bottom d-none">
-      <div class="container-fluid">
-        <div class="row align-items-center py-3">
-          <div class="col-md-6">
-            <!-- <div class="d-flex align-items-center">
-              <button
-                class="btn btn-icon btn-sm btn-light me-3 d-lg-none"
-                @click="toggleSidebar"
-              >
-                <i class="ki-duotone ki-burger-menu-3 fs-2">
-                  <span class="path1"></span>
-                  <span class="path2"></span>
-                </i>
-              </button>
-              <div>
-                <h1 class="mb-0 h4 fw-bold text-gray-800">Knowledge Base</h1>
-                <p class="text-muted fs-7 mb-0">
-                  Documentation and guides for all applications
-                </p>
+  <div class="gitbook-layout">
+    <!-- GitBook Header -->
+    <div class="gitbook-header">
+      <div class="gitbook-header-left">
+        <div class="gitbook-brand">
+          <i class="ki-duotone ki-book fs-1 me-2">
+            <span class="path1"></span>
+            <span class="path2"></span>
+          </i>
+          <span class="gitbook-title">Quantum Byte</span>
+        </div>
+      </div>
+      <div class="gitbook-header-right">
+        <div class="gitbook-search">
+          <i class="ki-duotone ki-magnifier fs-3 position-absolute start-0 top-50 translate-middle-y ms-3">
+            <span class="path1"></span>
+          </i>
+          <input
+            type="text"
+            class="gitbook-search-input"
+            placeholder="Search..."
+          />
+          <kbd class="gitbook-search-kbd">⌘ K</kbd>
+        </div>
+      </div>
+    </div>
+
+    <!-- GitBook Body -->
+    <div class="gitbook-body">
+      <!-- GitBook Sidebar -->
+      <div class="gitbook-sidebar" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
+        <KnowledgebaseSidebar @close-mobile="closeMobileSidebar" />
+      </div>
+
+      <!-- GitBook Main Content -->
+      <div class="gitbook-main">
+        <div class="gitbook-content">
+          <KnowledgebaseContent />
+        </div>
+        
+        <!-- GitBook Footer -->
+        <div class="gitbook-footer">
+          <div class="gitbook-footer-content">
+            <div class="gitbook-footer-nav">
+              <div class="gitbook-footer-prev">
+                <span class="text-muted small">Previous</span>
+                <div>Membuat Layanan Informasi</div>
               </div>
-            </div> -->
+              <div class="gitbook-footer-next">
+                <span class="text-muted small">Next</span>
+                <div>Memulai</div>
+              </div>
+            </div>
           </div>
-          <div class="col-md-6 d-none">
-            <div class="d-flex align-items-center justify-content-end">
-              <!-- Quick Actions -->
-              <div class="me-3">
-                <button
-                  class="btn btn-sm btn-light-primary me-2"
-                  :class="{ active: showFavoritesOnly }"
-                  @click="toggleFavoritesFilter"
-                  title="Show only favorites"
-                >
-                  <i class="ki-duotone ki-heart fs-4">
-                    <span class="path1"></span>
-                    <span class="path2"></span>
-                  </i>
-                  Favorites
-                </button>
-                <button
-                  class="btn btn-sm me-2"
-                  :class="
-                    store.useApiData ? 'btn-light-success' : 'btn-light-warning'
-                  "
-                  @click="toggleDataSource"
-                  :title="
-                    store.useApiData ? 'Using API Data' : 'Using Mock Data'
-                  "
-                >
-                  <i class="ki-duotone ki-cloud fs-4">
-                    <span class="path1"></span>
-                    <span class="path2"></span>
-                  </i>
-                  {{ store.useApiData ? "API" : "Mock" }}
-                </button>
-                <button
-                  class="btn btn-sm btn-light-success"
-                  @click="refreshData"
-                  title="Refresh data"
-                  :disabled="isLoading"
-                >
-                  <i class="ki-duotone ki-arrows-circle fs-4">
-                    <span class="path1"></span>
-                    <span class="path2"></span>
-                  </i>
-                  Refresh
-                </button>
-                <button
-                  class="btn btn-sm btn-light-primary ms-2"
-                  @click="replaceDashboardData"
-                  title="Replace with Dashboard Data"
-                  :disabled="isLoading"
-                >
-                  <i class="ki-duotone ki-switch fs-4">
-                    <span class="path1"></span>
-                    <span class="path2"></span>
-                  </i>
-                  Replace
-                </button>
-              </div>
+        </div>
+      </div>
+    </div>
 
-              <!-- Theme Toggle -->
-              <div class="me-3">
-                <button
-                  class="btn btn-sm btn-icon btn-light"
-                  @click="toggleTheme"
-                  :title="
-                    isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
-                  "
-                >
-                  <i
-                    :class="`ki-duotone fs-2 ${
-                      isDarkMode ? 'ki-sun' : 'ki-moon'
-                    }`"
-                  >
-                    <span class="path1"></span>
-                    <span class="path2"></span>
-                  </i>
-                </button>
-              </div>
-
-              <!-- Settings -->
-              <div class="dropdown">
-                <button
-                  class="btn btn-sm btn-icon btn-light"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <i class="ki-duotone ki-setting-2 fs-2">
-                    <span class="path1"></span>
+    <!-- Mobile Overlay -->
+    <div
+      v-if="sidebarMobileOpen"
+      class="gitbook-mobile-overlay"
+      @click="closeMobileSidebar"
+    ></div>
+  </div>
+</template>
                     <span class="path2"></span>
                   </i>
                 </button>

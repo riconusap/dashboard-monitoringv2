@@ -25,11 +25,8 @@
     </div>
 
     <!-- Search Results -->
-    <div
-      v-if="searchQuery && searchResults.length > 0"
-      class="kb-search-results"
-    >
-      <div class="card">
+    <div v-if="searchQuery" class="kb-search-results">
+      <div class="card" v-if="searchResults.length > 0">
         <div class="card-header border-0 pt-5">
           <h3 class="card-title">
             <i class="ki-duotone ki-magnifier fs-2 me-2">
@@ -101,6 +98,31 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Create A card to Handle Not found search -->
+      <div v-else class="card">
+        <div class="card-body text-center py-10">
+          <i class="ki-duotone ki-questionnaire-tablet fs-1 text-warning mb-5">
+            <span class="path1"></span>
+            <span class="path2"></span>
+          </i>
+          <h4 class="fw-bold text-gray-800 mb-3">No Results Found</h4>
+          <p class="text-gray-600 fs-5 mb-0">
+            <span v-if="searchQuery.length < 2"
+              >Please type more than 2 letters to search.
+            </span>
+            <span v-else>
+              Your search for "{{ searchQuery }}" did not return any resultt.
+            </span>
+          </p>
+          <button
+            class="btn btn-light-primary mt-5"
+            @click="store.clearSearch()"
+          >
+            Clear Search
+          </button>
         </div>
       </div>
     </div>
@@ -246,8 +268,12 @@
                   @click="selectArticleDirectly(article)"
                 >
                   <div class="card-body p-5">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                      <h5 class="card-title fw-bold mb-2">{{ article.title }}</h5>
+                    <div
+                      class="d-flex justify-content-between align-items-start mb-3"
+                    >
+                      <h5 class="card-title fw-bold mb-2">
+                        {{ article.title }}
+                      </h5>
                       <button
                         class="btn btn-sm btn-icon"
                         :class="
@@ -260,12 +286,14 @@
                         {{ isArticleFavorite(article.id) ? "♥" : "♡" }}
                       </button>
                     </div>
-                    
+
                     <p class="text-gray-600 fs-6 mb-4">
                       {{ getArticleExcerpt(article) }}
                     </p>
 
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div
+                      class="d-flex justify-content-between align-items-center"
+                    >
                       <div class="text-muted fs-7">
                         <div>By {{ article.author }}</div>
                         <div>{{ formatDate(article.updated_at) }}</div>
@@ -288,7 +316,9 @@
           <!-- Empty State -->
           <div v-else class="text-center py-8">
             <div class="mb-4">
-              <div class="symbol symbol-circle symbol-100px bg-light-primary mx-auto mb-4">
+              <div
+                class="symbol symbol-circle symbol-100px bg-light-primary mx-auto mb-4"
+              >
                 <span class="symbol-label fs-2 text-primary">📝</span>
               </div>
             </div>
@@ -400,6 +430,9 @@ export default defineComponent({
 
     const getArticleExcerpt = (article: KnowledgebaseArticle) => {
       // Remove HTML tags and get first 150 characters
+      if (!article.content) {
+        return "Konten Tidak Tersedia";
+      }
       const plainText = article.content.replace(/<[^>]*>/g, "").trim();
       return plainText.substring(0, 150) + "...";
     };
@@ -464,6 +497,7 @@ export default defineComponent({
       handleSearchResultClick,
       navigateToCrumb,
       getArticlesByCategory: store.getArticlesByCategory,
+      store,
     };
   },
 });

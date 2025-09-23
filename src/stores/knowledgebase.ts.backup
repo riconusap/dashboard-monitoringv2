@@ -9,35 +9,25 @@ import { mockKnowledgebaseApps } from "@/stores/knowledgebaseData";
 import DashboardApiService from "@/services/DashboardApiService";
 
 export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
+
+export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
   // State
-  const applications = ref<KnowledgebaseApplication[]>([]);
+  const applications = ref<KnowledgebaseApplication[]>(mockKnowledgebaseApps);
   const selectedApp = ref<KnowledgebaseApplication | null>(null);
   const selectedCategory = ref<KnowledgebaseCategory | null>(null);
   const selectedArticle = ref<KnowledgebaseArticle | null>(null);
   const searchQuery = ref("");
   const searchResults = ref<any[]>([]);
+  const favorites = ref({
+    apps: JSON.parse(localStorage.getItem("kb_favorite_apps") || "[]"),
+    articles: JSON.parse(localStorage.getItem("kb_favorite_articles") || "[]"),
+  });
   const breadcrumbs = ref<any[]>([]);
-
-  // API state
+  
+  // API State
   const isLoading = ref(false);
   const error = ref<string | null>(null);
-  const useApiData = ref(true);
-
-  const favorites = ref<{
-    applications: number[];
-    categories: number[];
-    articles: number[];
-  }>({
-    applications: [],
-    categories: [],
-    articles: [],
-  });
-
-  // Load favorites from localStorage
-  const savedFavorites = localStorage.getItem("kb-favorites");
-  if (savedFavorites) {
-    favorites.value = JSON.parse(savedFavorites);
-  }
+  const useApiData = ref(true); // Toggle between API and mock data
 
   // Getters
   const getAppById = computed(() => {
@@ -67,7 +57,7 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
   const getArticlesByCategory = computed(() => {
     return (categoryId: number) => {
       if (!selectedApp.value) return [];
-
+      // Get all category IDs including subcategories
       const getAllCategoryIds = (targetId: number): number[] => {
         const findCategoryAndChildren = (
           categories: KnowledgebaseCategory[],
@@ -75,23 +65,20 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
           for (const category of categories) {
             if (category.id === targetId) {
               // Found the target category, return its ID and all children IDs
-              const ids = [category.id];
+              const result = [category.id];
               const getChildrenIds = (cat: KnowledgebaseCategory): number[] => {
-                let result = [cat.id];
-                if (cat.children) {
-                  for (const child of cat.children) {
-                    result = result.concat(getChildrenIds(child));
-                  }
+                let ids = [cat.id];
+                for (const child of cat.children) {
+                  ids = ids.concat(getChildrenIds(child));
                 }
-                return result;
+                return ids;
               };
-              if (category.children) {
-                for (const child of category.children) {
-                  ids.push(...getChildrenIds(child));
-                }
+              for (const child of category.children) {
+                result.push(...getChildrenIds(child));
               }
-              return ids;
+              return result;
             }
+            // Recursively search in children
             const childResult = findCategoryAndChildren(category.children);
             if (childResult.length > 0) return childResult;
           }
@@ -109,25 +96,19 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
 
   const getFavoriteApps = computed(() => {
     return applications.value.filter((app) =>
-      favorites.value.applications.includes(app.app_id),
+      favorites.value.apps.includes(app.app_id),
     );
   });
 
   const getFavoriteArticles = computed(() => {
-    const allArticles: KnowledgebaseArticle[] = [];
-    applications.value.forEach((app) => {
-      allArticles.push(...app.article_list);
-    });
+    const allArticles = applications.value.flatMap((app) => app.article_list);
     return allArticles.filter((article) =>
       favorites.value.articles.includes(article.id),
     );
   });
 
   const getRecentArticles = computed(() => {
-    const allArticles: KnowledgebaseArticle[] = [];
-    applications.value.forEach((app) => {
-      allArticles.push(...app.article_list);
-    });
+    const allArticles = applications.value.flatMap((app) => app.article_list);
     return allArticles
       .sort(
         (a, b) =>
@@ -137,10 +118,7 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
   });
 
   const getPopularArticles = computed(() => {
-    const allArticles: KnowledgebaseArticle[] = [];
-    applications.value.forEach((app) => {
-      allArticles.push(...app.article_list);
-    });
+    const allArticles = applications.value.flatMap((app) => app.article_list);
     return allArticles.sort((a, b) => b.views - a.views).slice(0, 5);
   });
 
@@ -159,18 +137,40 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
   };
 
   const selectArticle = (article: KnowledgebaseArticle) => {
+    // Check if it's a different article to avoid recursive updates
+    if (selectedArticle.value?.id === article.id) {
+      return;
+    }
+
     selectedArticle.value = article;
+
+    // Increment view count in a non-reactive way
+    const appIndex = applications.value.findIndex((app) =>
+      app.article_list.some((a) => a.id === article.id),
+    );
+    if (appIndex >= 0) {
+      const articleIndex = applications.value[appIndex].article_list.findIndex(
+        (a) => a.id === article.id,
+      );
+      if (articleIndex >= 0) {
+        applications.value[appIndex].article_list[articleIndex].views++;
+      }
+    }
+
     updateBreadcrumbs();
   };
 
   const toggleAppFavorite = (appId: number) => {
-    const index = favorites.value.applications.indexOf(appId);
+    const index = favorites.value.apps.indexOf(appId);
     if (index > -1) {
-      favorites.value.applications.splice(index, 1);
+      favorites.value.apps.splice(index, 1);
     } else {
-      favorites.value.applications.push(appId);
+      favorites.value.apps.push(appId);
     }
-    localStorage.setItem("kb-favorites", JSON.stringify(favorites.value));
+    localStorage.setItem(
+      "kb_favorite_apps",
+      JSON.stringify(favorites.value.apps),
+    );
   };
 
   const toggleArticleFavorite = (articleId: number) => {
@@ -188,27 +188,29 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
 
   // API Functions
   const loadKnowledgebaseFromApi = async () => {
+    if (!useApiData.value) return;
+    
     isLoading.value = true;
     error.value = null;
 
     try {
       // Get the full dashboard data
       const dashboardData = await DashboardApiService.getDashboardData();
-
+      
       // Try to extract knowledge base applications from dashboard data
       let apiApplications: KnowledgebaseApplication[] = [];
-
-      if (dashboardData.article_list) {
+      
+      if (dashboardData.data?.knowledge_base) {
         // If dashboard has specific knowledge_base field
-        apiApplications = dashboardData;
-      } else if (Array.isArray(dashboardData)) {
+        apiApplications = dashboardData.data.knowledge_base;
+      } else if (Array.isArray(dashboardData.data)) {
         // If the data itself is an array of applications
-        apiApplications = dashboardData as KnowledgebaseApplication[];
+        apiApplications = dashboardData.data as KnowledgebaseApplication[];
       } else {
         // Fallback: try to use getKnowledgebaseApps method
         apiApplications = await DashboardApiService.getKnowledgebaseApps();
       }
-
+      
       if (apiApplications && apiApplications.length > 0) {
         applications.value = apiApplications;
         console.log(
@@ -223,14 +225,19 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
     } catch (err: any) {
       error.value = err.message || "Failed to load knowledge base data";
       console.error("Error loading knowledge base from API:", err);
-      // Keep applications empty on error instead of falling back to mock data
-      applications.value = [];
+      // Fallback to mock data on error
+      applications.value = mockKnowledgebaseApps;
     } finally {
       isLoading.value = false;
     }
   };
 
   const searchKnowledgebaseApi = async (query: string) => {
+    if (!useApiData.value) {
+      search(query); // Use local search as fallback
+      return;
+    }
+
     try {
       const apiResults = await DashboardApiService.searchKnowledgebase(query);
       if (apiResults && apiResults.length > 0) {
@@ -256,14 +263,14 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
 
     try {
       const dashboardData = await DashboardApiService.getDashboardData();
-
+      
       // Directly replace applications with dashboard data
       // This assumes the dashboard data structure matches KnowledgebaseApplication
       if (dashboardData.data) {
         // If the data is an array, use it directly
         if (Array.isArray(dashboardData.data)) {
           applications.value = dashboardData.data as KnowledgebaseApplication[];
-        }
+        } 
         // If there's a specific knowledge_base field
         else if (dashboardData.data.knowledge_base) {
           applications.value = dashboardData.data.knowledge_base;
@@ -272,11 +279,8 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
         else {
           applications.value = [dashboardData.data as any];
         }
-
-        console.log(
-          "Replaced knowledge base with dashboard data:",
-          applications.value,
-        );
+        
+        console.log("Replaced knowledge base with dashboard data:", applications.value);
       }
     } catch (err: any) {
       error.value = err.message || "Failed to replace with dashboard data";
@@ -289,10 +293,8 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
   const toggleDataSource = () => {
     useApiData.value = !useApiData.value;
     if (useApiData.value) {
-      // Load from API
       loadKnowledgebaseFromApi();
     } else {
-      // Load mock data for testing/fallback
       applications.value = mockKnowledgebaseApps;
     }
   };
@@ -328,9 +330,7 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
               highlight: category.name,
             });
           }
-          if (category.children) {
-            searchCategories(category.children);
-          }
+          searchCategories(category.children);
         });
       };
       searchCategories(app.category_list);
@@ -339,6 +339,7 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
       app.article_list.forEach((article) => {
         if (
           article.title.toLowerCase().includes(searchLower) ||
+          article.content.toLowerCase().includes(searchLower) ||
           article.tags.some((tag) => tag.toLowerCase().includes(searchLower))
         ) {
           results.push({
@@ -441,9 +442,6 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
 
   // Initialize
   updateBreadcrumbs();
-
-  // Auto-load knowledge base data from API when store is created
-  loadKnowledgebaseFromApi();
 
   return {
     // State

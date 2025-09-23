@@ -8,7 +8,9 @@
       <!-- Category Button -->
       <div
         class="d-flex align-items-center justify-content-between category-header"
-        :class="{ 'has-children': category.children.length > 0 }"
+        :class="{
+          'has-children': category.children && category.children.length > 0,
+        }"
       >
         <button
           class="btn btn-sm btn-link text-start p-2 flex-grow-1 text-decoration-none"
@@ -44,7 +46,7 @@
       <!-- Expanded content: subcategories and articles -->
       <div v-if="isExpanded(category.id)" class="ms-3 mt-1">
         <!-- Children Categories (recursive) -->
-        <div v-if="category.children.length > 0">
+        <div v-if="category.children && category.children.length > 0">
           <CategoryTree
             :categories="category.children"
             :selected-category="selectedCategory"
@@ -125,7 +127,7 @@ export default defineComponent({
       if (getDirectArticlesForCategory(category.id).length > 0) {
         return true;
       }
-      
+
       // Recursively check if any child category has articles
       return category.children.some((child) => hasAnyArticles(child));
     };
@@ -136,7 +138,7 @@ export default defineComponent({
 
     const hasContent = (category: KnowledgebaseCategory) => {
       return (
-        category.children.length > 0 ||
+        category.children ||
         getDirectArticlesForCategory(category.id).length > 0
       );
     };
@@ -166,7 +168,7 @@ export default defineComponent({
     const handleCategoryClick = (category: KnowledgebaseCategory) => {
       // Always select the category for viewing its articles
       emit("select-category", category);
-      
+
       // If category has content (children or articles), also expand/collapse it
       if (hasContent(category)) {
         toggleExpanded(category.id);

@@ -21,15 +21,47 @@ class ApiService {
     ApiService.vueInstance.use(VueAxios, axios);
     ApiService.vueInstance.axios.defaults.baseURL =
       import.meta.env.VITE_APP_API_URL;
+
+    // Set timeout for requests (30 seconds)
+    ApiService.vueInstance.axios.defaults.timeout = 30000;
+
+    // Add request interceptor for better error handling
+    ApiService.vueInstance.axios.interceptors.request.use(
+      (config) => {
+        // Add timestamp to requests for debugging
+        config.metadata = { startTime: new Date() };
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      },
+    );
+
+    // Add response interceptor for better error handling
+    ApiService.vueInstance.axios.interceptors.response.use(
+      (response) => {
+        return response;
+      },
+      (error) => {
+        // Handle timeout errors specifically
+        if (
+          error.code === "ECONNABORTED" &&
+          error.message.includes("timeout")
+        ) {
+          error.message =
+            "Request timeout. Please check your connection and try again.";
+        }
+        return Promise.reject(error);
+      },
+    );
   }
 
   /**
    * @description set the default HTTP request headers
    */
   public static setHeader(): void {
-    ApiService.vueInstance.axios.defaults.headers.common[
-      "Authorization"
-    ] = `Token ${JwtService.getToken()}`;
+    ApiService.vueInstance.axios.defaults.headers.common["Authorization"] =
+      `Bearer ${JwtService.getToken()}`;
     ApiService.vueInstance.axios.defaults.headers.common["Accept"] =
       "application/json";
   }
@@ -41,6 +73,7 @@ class ApiService {
    * @returns Promise<AxiosResponse>
    */
   public static query(resource: string, params: any): Promise<AxiosResponse> {
+    console.log(resource, params);
     return ApiService.vueInstance.axios.get(resource, params);
   }
 
@@ -52,9 +85,10 @@ class ApiService {
    */
   public static get(
     resource: string,
-    slug = "" as string
+    slug = "" as string,
   ): Promise<AxiosResponse> {
-    return ApiService.vueInstance.axios.get(`${resource}/${slug}`);
+    const url = slug ? `${resource}/${slug}` : resource;
+    return ApiService.vueInstance.axios.get(url);
   }
 
   /**
@@ -77,7 +111,7 @@ class ApiService {
   public static update(
     resource: string,
     slug: string,
-    params: any
+    params: any,
   ): Promise<AxiosResponse> {
     return ApiService.vueInstance.axios.put(`${resource}/${slug}`, params);
   }

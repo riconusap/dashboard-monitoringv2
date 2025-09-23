@@ -47,7 +47,9 @@
             <h3 class="fw-bold text-warning mb-2">
               {{ getAppFavoriteArticles(selectedApp).length }}
             </h3>
-            <span class="text-gray-700 fw-semibold fs-6">Favorite Articles</span>
+            <span class="text-gray-700 fw-semibold fs-6"
+              >Favorite Articles</span
+            >
           </div>
         </div>
         <div class="col-md-3">
@@ -100,7 +102,10 @@
               </i>
             </div>
 
-            <div v-if="selectedApp.category_list.length > 5" class="text-center pt-3">
+            <div
+              v-if="selectedApp.category_list.length > 5"
+              class="text-center pt-3"
+            >
               <button class="btn btn-sm btn-light-success">
                 View All {{ selectedApp.category_list.length }} Categories
               </button>
@@ -139,8 +144,12 @@
               <div class="flex-grow-1">
                 <h6 class="mb-1 text-gray-800">{{ article.title }}</h6>
                 <div class="d-flex align-items-center mb-1">
-                  <span class="text-gray-500 fs-7 me-3">{{ article.author }}</span>
-                  <span class="badge badge-light-primary fs-8">{{ article.read_time }} min</span>
+                  <span class="text-gray-500 fs-7 me-3">{{
+                    article.author
+                  }}</span>
+                  <span class="badge badge-light-primary fs-8"
+                    >{{ article.read_time }} min</span
+                  >
                 </div>
                 <span class="text-gray-400 fs-8">
                   {{ formatDate(article.updated_at) }}
@@ -164,7 +173,9 @@
             Your Favorite Articles
           </h3>
           <div class="card-toolbar">
-            <span class="badge badge-light-danger">{{ getAppFavoriteArticles(selectedApp).length }}</span>
+            <span class="badge badge-light-danger">{{
+              getAppFavoriteArticles(selectedApp).length
+            }}</span>
           </div>
         </div>
         <div class="card-body">
@@ -235,8 +246,12 @@
                 <div class="flex-grow-1">
                   <h6 class="fw-bold mb-1 fs-7">{{ article.title }}</h6>
                   <div class="d-flex align-items-center">
-                    <span class="text-gray-600 fs-8 me-2">{{ article.views }} views</span>
-                    <span class="badge badge-light-warning fs-8">{{ article.read_time }} min</span>
+                    <span class="text-gray-600 fs-8 me-2"
+                      >{{ article.views }} views</span
+                    >
+                    <span class="badge badge-light-warning fs-8"
+                      >{{ article.read_time }} min</span
+                    >
                   </div>
                 </div>
               </div>
@@ -251,10 +266,10 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useKnowledgebaseStore } from "@/stores/knowledgebase";
-import type { 
-  KnowledgebaseApplication, 
-  KnowledgebaseArticle, 
-  KnowledgebaseCategory 
+import type {
+  KnowledgebaseApplication,
+  KnowledgebaseArticle,
+  KnowledgebaseCategory,
 } from "@/types/knowledgebase";
 
 export default defineComponent({
@@ -265,7 +280,7 @@ export default defineComponent({
     const selectedApp = computed(() => store.selectedApp!);
 
     const isAppFavorite = (appId: number) => {
-      return store.favorites.apps.includes(appId);
+      return store.favorites.applications.includes(appId);
     };
 
     const toggleAppFavorite = (appId: number) => {
@@ -276,7 +291,9 @@ export default defineComponent({
       const countCategories = (categories: KnowledgebaseCategory[]): number => {
         let count = categories.length;
         for (const category of categories) {
-          count += countCategories(category.children);
+          if (category.children) {
+            count += countCategories(category.children);
+          }
         }
         return count;
       };
@@ -429,7 +446,7 @@ export default defineComponent({
   .kb-app-overview {
     padding: 1rem;
   }
-  
+
   .mb-6 {
     margin-bottom: 1.5rem !important;
   }

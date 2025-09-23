@@ -104,6 +104,7 @@ import type {
 } from "@/types/knowledgebase";
 import CategoryTree from "./CategoryTree.vue";
 import KnowledgebaseOverview from "./KnowledgebaseOverview.vue";
+import { ElMessage } from "element-plus";
 
 export default defineComponent({
   name: "KnowledgebaseSidebar",
@@ -121,7 +122,7 @@ export default defineComponent({
     const selectedArticle = computed(() => store.selectedArticle);
 
     const isAppFavorite = (appId: number) => {
-      return store.favorites.apps.includes(appId);
+      return store.favorites.applications.includes(appId);
     };
 
     const toggleAppFavorite = (appId: number) => {
@@ -132,7 +133,9 @@ export default defineComponent({
       const countCategories = (categories: KnowledgebaseCategory[]): number => {
         let count = categories.length;
         for (const category of categories) {
-          count += countCategories(category.children);
+          if (category.children) {
+            count += countCategories(category.children);
+          }
         }
         return count;
       };
@@ -156,7 +159,7 @@ export default defineComponent({
       store.selectArticle(null as any);
     };
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
       if (localSearchQuery.value.trim()) {
         store.search(localSearchQuery.value);
       } else {

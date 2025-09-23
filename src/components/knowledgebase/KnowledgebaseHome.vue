@@ -199,6 +199,7 @@ export default defineComponent({
     const favoriteArticles = computed(() => store.getFavoriteArticles);
 
     const totalArticles = computed(() => {
+      console.log(applications.value);
       return applications.value.reduce(
         (total, app) => total + app.article_list.length,
         0,
@@ -206,7 +207,7 @@ export default defineComponent({
     });
 
     const isAppFavorite = (appId: number) => {
-      return store.favorites.apps.includes(appId);
+      return store.favorites.applications.includes(appId);
     };
 
     const toggleAppFavorite = (appId: number) => {
@@ -217,10 +218,13 @@ export default defineComponent({
       const countCategories = (categories: KnowledgebaseCategory[]): number => {
         let count = categories.length;
         for (const category of categories) {
-          count += countCategories(category.children);
+          if (category.children) {
+            count += countCategories(category.children);
+          }
         }
         return count;
       };
+      console.log(app.category_list.length);
       return countCategories(app.category_list);
     };
 
