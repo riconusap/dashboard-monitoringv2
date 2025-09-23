@@ -68,14 +68,14 @@ const routes: Array<RouteRecordRaw> = [
           breadcrumbs: ["Account"],
         },
         children: [
-          {
-            path: "overview",
-            name: "account-overview",
-            component: () => import("@/views/crafted/account/Overview.vue"),
-            meta: {
-              pageTitle: "Overview",
-            },
-          },
+          // {
+          //   path: "overview",
+          //   name: "account-overview",
+          //   component: () => import("@/views/crafted/account/Overview.vue"),
+          //   meta: {
+          //     pageTitle: "Overview",
+          //   },
+          // },
           {
             path: "settings",
             name: "account-settings",

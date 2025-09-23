@@ -250,11 +250,6 @@
           </div>
         </div>
         <div class="card-body">
-          <!-- Category Description -->
-          <div v-if="selectedCategory.description" class="mb-6">
-            <p class="text-gray-600 fs-5">{{ selectedCategory.description }}</p>
-          </div>
-
           <!-- Articles List -->
           <div v-if="getArticlesByCategory(selectedCategory.id).length > 0">
             <div class="row g-4">

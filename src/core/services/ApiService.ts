@@ -29,7 +29,7 @@ class ApiService {
     ApiService.vueInstance.axios.interceptors.request.use(
       (config) => {
         // Add timestamp to requests for debugging
-        config.metadata = { startTime: new Date() };
+        // config.metadata = { startTime: new Date() };
         return config;
       },
       (error) => {
@@ -73,7 +73,6 @@ class ApiService {
    * @returns Promise<AxiosResponse>
    */
   public static query(resource: string, params: any): Promise<AxiosResponse> {
-    console.log(resource, params);
     return ApiService.vueInstance.axios.get(resource, params);
   }
 

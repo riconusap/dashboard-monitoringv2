@@ -196,11 +196,12 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
       const dashboardData = await DashboardApiService.getDashboardData();
 
       // Try to extract knowledge base applications from dashboard data
-      let apiApplications: KnowledgebaseApplication[] = [];
+      let apiApplications: any = [];
 
-      if (dashboardData.article_list) {
-        // If dashboard has specific knowledge_base field
+      if (dashboardData) {
+        // If dashboard has specific article_list field
         apiApplications = dashboardData;
+        console.log(apiApplications);
       } else if (Array.isArray(dashboardData)) {
         // If the data itself is an array of applications
         apiApplications = dashboardData as KnowledgebaseApplication[];
@@ -211,10 +212,6 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
 
       if (apiApplications && apiApplications.length > 0) {
         applications.value = apiApplications;
-        console.log(
-          "Loaded knowledge base data from dashboard API:",
-          apiApplications,
-        );
       } else {
         console.warn("No knowledge base data found in dashboard response");
         // Don't fallback to mock data immediately, let user see empty state
@@ -339,6 +336,7 @@ export const useKnowledgebaseStore = defineStore("knowledgebase", () => {
       app.article_list.forEach((article) => {
         if (
           article.title.toLowerCase().includes(searchLower) ||
+          article.content.toLowerCase().includes(searchLower) ||
           article.tags.some((tag) => tag.toLowerCase().includes(searchLower))
         ) {
           results.push({

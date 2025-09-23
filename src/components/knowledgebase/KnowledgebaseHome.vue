@@ -199,7 +199,6 @@ export default defineComponent({
     const favoriteArticles = computed(() => store.getFavoriteArticles);
 
     const totalArticles = computed(() => {
-      console.log(applications.value);
       return applications.value.reduce(
         (total, app) => total + app.article_list.length,
         0,
@@ -224,7 +223,6 @@ export default defineComponent({
         }
         return count;
       };
-      console.log(app.category_list.length);
       return countCategories(app.category_list);
     };
 

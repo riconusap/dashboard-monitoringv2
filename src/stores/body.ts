@@ -40,8 +40,7 @@ export const useBodyStore = defineStore("body", () => {
   function customStyle(property: string, value: string) {
     // get element html by class name
     const target = ".wrapper";
-    const element = document.querySelector(target);
-    console.log(property, value);
+    const element = document.querySelector(target) as HTMLElement;
     if (element) {
       element.style.setProperty(property, value);
     }

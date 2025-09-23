@@ -18,7 +18,6 @@ class DashboardApiService {
   public static async getDashboardData(): Promise<DashboardApiResponse> {
     try {
       const response = await ApiService.get("dashboard");
-      console.log(response.data.data.application);
       return response.data.data.application;
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
